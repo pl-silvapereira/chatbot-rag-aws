@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <title>Chatbot Documental AWS</title>
+    <style>
+        body { font-family: system-ui, sans-serif; background: #f0f2f5; display: flex; justify-content: center; padding-top: 40px; }
+        .chat-container { background: white; width: 550px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); padding: 20px; }
+        #chat-box { height: 350px; overflow-y: auto; border: 1px solid #ddd; padding: 10px; border-radius: 4px; margin-bottom: 10px; background: #fafafa; }
+        .input-area { display: flex; gap: 8px; }
+        input { flex: 1; padding: 10px; border: 1px solid #ccc; border-radius: 4px; }
+        button { padding: 10px 18px; background: #0066cc; color: white; border: none; border-radius: 4px; cursor: pointer; font-weight: bold; }
+    </style>
+</head>
+<body>
+
+<div class="chat-container">
+    <h3>Consulta RAG - Documentos PDF</h3>
+    <div id="chat-box"></div>
+    <div class="input-area">
+        <input type="text" id="pergunta" placeholder="Digite sua pergunta..." onkeypress="if(event.key==='Enter') enviar()">
+        <button onclick="enviar()">Enviar</button>
+    </div>
+</div>
+
+<script>
+    const API_URL = "https://04ly2k25d5.execute-api.us-east-2.amazonaws.com/perguntar";
+
+    async function enviar() {
+        const input = document.getElementById("pergunta");
+        const pergunta = input.value;
+        if (!pergunta) return;
+
+        const box = document.getElementById("chat-box");
+        box.innerHTML += `<p><strong>Você:</strong> ${pergunta}</p>`;
+        input.value = "";
+        
+        const loadingId = "load-" + Date.now();
+        box.innerHTML += `<p id="${loadingId}"><em>Buscando no Bedrock...</em></p>`;
+        box.scrollTop = box.scrollHeight;
+
+        try {
+            const res = await fetch(API_URL, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ pergunta: pergunta })
+            });
+            const data = await res.json();
+            document.getElementById(loadingId).remove();
+            box.innerHTML += `<p><strong>Bot:</strong> ${data.resposta}</p>`;
+        } catch (e) {
+            document.getElementById(loadingId).remove();
+            box.innerHTML += `<p style="color:red;">Erro ao obter resposta.</p>`;
+        }
+        box.scrollTop = box.scrollHeight;
+    }
+</script>
+
+</body>
+</html>
