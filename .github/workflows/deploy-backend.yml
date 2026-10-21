@@ -1,7 +1,7 @@
 name: Deploy Backend Lambda Serverless
 
 on:
-  workflow_dispatch: # <--- Permite acionar o pipeline manualmente pelo painel
+  workflow_dispatch: # Permite acionar manualmente pelo painel do GitHub
   push:
     branches:
       - main
