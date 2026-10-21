@@ -25,7 +25,7 @@
             height: 100vh;
         }
 
-        /* Top Header IBM Carbon */
+        /* Header IBM Carbon */
         .carbon-header {
             background-color: #161616; /* Carbon Gray 100 */
             color: #ffffff;
@@ -35,6 +35,7 @@
             align-items: center;
             justify-content: space-between;
             box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+            flex-shrink: 0;
         }
 
         .carbon-header-title {
@@ -59,14 +60,16 @@
         /* Layout do Container Chat */
         .app-container {
             flex: 1;
-            max-width: 840px;
+            max-width: 880px;
             width: 100%;
             margin: 1.5rem auto;
             display: flex;
             flex-direction: column;
             background: #ffffff;
             border: 1px solid #e0e0e0;
-            box-shadow: 0 2px 6px rgba(0,0,0,0.05);
+            box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+            height: calc(100vh - 48px - 3rem);
+            overflow: hidden;
         }
 
         #chat-box {
@@ -77,6 +80,7 @@
             flex-direction: column;
             gap: 1.25rem;
             background-color: #f4f4f4;
+            scroll-behavior: smooth; /* Rolagem suave nativa */
         }
 
         .msg-row {
@@ -93,17 +97,29 @@
             align-self: flex-start;
         }
 
+        .msg-header {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            margin-bottom: 6px;
+        }
+
+        .msg-row.user .msg-header {
+            justify-content: flex-end;
+        }
+
+        .msg-icon {
+            width: 16px;
+            height: 16px;
+            fill: #525252;
+        }
+
         .msg-label {
             font-size: 11px;
             font-weight: 600;
             color: #525252;
-            margin-bottom: 4px;
             text-transform: uppercase;
             letter-spacing: 0.5px;
-        }
-
-        .msg-row.user .msg-label {
-            text-align: right;
         }
 
         /* Carbon Tiles para balões de mensagem */
@@ -112,6 +128,7 @@
             font-size: 14px;
             line-height: 1.5;
             min-height: auto;
+            border-radius: 2px;
         }
 
         .msg-row.user .bx--tile {
@@ -140,6 +157,7 @@
             display: flex;
             gap: 1rem;
             align-items: flex-end;
+            flex-shrink: 0;
         }
 
         .bx--form-item {
@@ -160,6 +178,9 @@
             font-size: 13px;
             color: #525252;
             font-style: italic;
+            display: flex;
+            align-items: center;
+            gap: 8px;
         }
     </style>
 </head>
@@ -170,14 +191,20 @@
         <div class="carbon-header-title">
             <span>IBM Carbon UI</span> &nbsp;|&nbsp; <span>Assistente RAG AWS Bedrock</span>
         </div>
-        <span class="carbon-tag">S3 + Nova 2 Lite</span>
+        <span class="carbon-tag">Amazon Nova 2 Lite</span>
     </header>
 
     <!-- Container Principal Chat -->
     <div class="app-container">
         <div id="chat-box">
             <div class="msg-row bot">
-                <span class="msg-label">Assistente IBM Carbon</span>
+                <div class="msg-header">
+                    <!-- Ícone Bot (SVG Carbon) -->
+                    <svg class="msg-icon" viewBox="0 0 32 32">
+                        <path d="M16,2A14,14,0,1,0,30,16,14,14,0,0,0,16,2ZM8,14a2,2,0,1,1,2,2A2,2,0,0,1,8,14Zm12,10H12V22h8Zm2-8a2,2,0,1,1,2-2A2,2,0,0,1,22,16Z"/>
+                    </svg>
+                    <span class="msg-label">Assistente IBM Carbon</span>
+                </div>
                 <div class="bx--tile">
                     <p>Olá! Sou o assistente virtual configurado com o Carbon Design System. Envie sua pergunta sobre os documentos em PDF.</p>
                 </div>
@@ -199,6 +226,14 @@
     <script>
         const API_URL = "https://04ly2k25d5.execute-api.us-east-2.amazonaws.com/perguntar";
 
+        // Função de Scroll Down Automático
+        function scrollToBottom() {
+            const box = document.getElementById("chat-box");
+            setTimeout(() => {
+                box.scrollTop = box.scrollHeight;
+            }, 50);
+        }
+
         async function enviar() {
             const input = document.getElementById("pergunta");
             const pergunta = input.value.trim();
@@ -206,26 +241,37 @@
 
             const box = document.getElementById("chat-box");
 
-            // Mensagem do Usuário
+            // Adiciona Mensagem do Usuário com Ícone 👤
             box.innerHTML += `
                 <div class="msg-row user">
-                    <span class="msg-label">Você</span>
+                    <div class="msg-header">
+                        <span class="msg-label">Você</span>
+                        <svg class="msg-icon" style="fill: #0f62fe;" viewBox="0 0 32 32">
+                            <path d="M16,4a6,6,0,1,1-6,6A6,6,0,0,1,16,4m0-2a8,8,0,1,0,8,8A8,8,0,0,0,16,2Zm10,28H6V26a6,6,0,0,1,6-6h8a6,6,0,0,1,6,6Zm-18-2H24V26a4,4,0,0,0-4-4H12a4,4,0,0,0-4,4Z"/>
+                        </svg>
+                    </div>
                     <div class="bx--tile">${pergunta}</div>
                 </div>
             `;
             input.value = "";
+            scrollToBottom();
 
             // Indicador de Carregamento Carbon
             const loadingId = "load-" + Date.now();
             box.innerHTML += `
                 <div class="msg-row bot" id="${loadingId}">
-                    <span class="msg-label">Assistente IBM Carbon</span>
+                    <div class="msg-header">
+                        <svg class="msg-icon" viewBox="0 0 32 32">
+                            <path d="M16,2A14,14,0,1,0,30,16,14,14,0,0,0,16,2ZM8,14a2,2,0,1,1,2,2A2,2,0,0,1,8,14Zm12,10H12V22h8Zm2-8a2,2,0,1,1,2-2A2,2,0,0,1,22,16Z"/>
+                        </svg>
+                        <span class="msg-label">Assistente IBM Carbon</span>
+                    </div>
                     <div class="bx--tile loading-text">
-                        Consultando Amazon Bedrock & Base de Conhecimento S3...
+                        Consultando Amazon Bedrock & Base de Conhecimento...
                     </div>
                 </div>
             `;
-            box.scrollTop = box.scrollHeight;
+            scrollToBottom();
 
             try {
                 const res = await fetch(API_URL, {
@@ -241,7 +287,12 @@
                     const htmlResposta = marked.parse(data.resposta);
                     box.innerHTML += `
                         <div class="msg-row bot">
-                            <span class="msg-label">Assistente IBM Carbon</span>
+                            <div class="msg-header">
+                                <svg class="msg-icon" viewBox="0 0 32 32">
+                                    <path d="M16,2A14,14,0,1,0,30,16,14,14,0,0,0,16,2ZM8,14a2,2,0,1,1,2,2A2,2,0,0,1,8,14Zm12,10H12V22h8Zm2-8a2,2,0,1,1,2-2A2,2,0,0,1,22,16Z"/>
+                                </svg>
+                                <span class="msg-label">Assistente IBM Carbon</span>
+                            </div>
                             <div class="bx--tile">${htmlResposta}</div>
                         </div>
                     `;
@@ -249,7 +300,12 @@
                     const msgErro = data.erro || "Erro desconhecido no servidor.";
                     box.innerHTML += `
                         <div class="msg-row bot">
-                            <span class="msg-label">Assistente IBM Carbon</span>
+                            <div class="msg-header">
+                                <svg class="msg-icon" viewBox="0 0 32 32">
+                                    <path d="M16,2A14,14,0,1,0,30,16,14,14,0,0,0,16,2ZM8,14a2,2,0,1,1,2,2A2,2,0,0,1,8,14Zm12,10H12V22h8Zm2-8a2,2,0,1,1,2-2A2,2,0,0,1,22,16Z"/>
+                                </svg>
+                                <span class="msg-label">Assistente IBM Carbon</span>
+                            </div>
                             <div class="bx--tile" style="border-left: 4px solid #da1e28;">
                                 <strong>Erro:</strong> ${msgErro}
                             </div>
@@ -262,14 +318,19 @@
                 }
                 box.innerHTML += `
                     <div class="msg-row bot">
-                        <span class="msg-label">Assistente IBM Carbon</span>
+                        <div class="msg-header">
+                            <svg class="msg-icon" viewBox="0 0 32 32">
+                                <path d="M16,2A14,14,0,1,0,30,16,14,14,0,0,0,16,2ZM8,14a2,2,0,1,1,2,2A2,2,0,0,1,8,14Zm12,10H12V22h8Zm2-8a2,2,0,1,1,2-2A2,2,0,0,1,22,16Z"/>
+                            </svg>
+                            <span class="msg-label">Assistente IBM Carbon</span>
+                        </div>
                         <div class="bx--tile" style="border-left: 4px solid #da1e28;">
                             <strong>Erro:</strong> Falha de comunicação com a API.
                         </div>
                     </div>
                 `;
             }
-            box.scrollTop = box.scrollHeight;
+            scrollToBottom();
         }
     </script>
 </body>
