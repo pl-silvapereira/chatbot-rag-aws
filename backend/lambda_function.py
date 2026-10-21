@@ -1,24 +1,26 @@
 import json
 import boto3
 
-ssm_client = boto3.client('ssm')
-bedrock_agent = boto3.client('bedrock-agent-runtime')
+# Cliente AWS configurado explicitamente na região us-east-2
+ssm_client = boto3.client('ssm', region_name='us-east-2')
+bedrock_agent = boto3.client('bedrock-agent-runtime', region_name='us-east-2')
 
-# Modelo gerador (Claude 3 Sonnet)
-MODEL_ARN = 'arn:aws:bedrock:us-east-1::foundation-model/anthropic.claude-3-sonnet-20240229-v1:0'
+# ARN do Amazon Nova 2 Lite com perfil de inferência entre regiões (US)
+MODEL_ARN = 'arn:aws:bedrock:us-east-2::foundation-model/us.amazon.nova-2-lite-v1:0'
 
 def obter_kb_id():
-    """Lê a variável do SSM Parameter Store (Simulando o .env)"""
+    """Lê o ID da Knowledge Base gravado no SSM Parameter Store (.env da AWS)"""
     response = ssm_client.get_parameter(Name='/chatbot/KNOWLEDGE_BASE_ID')
     return response['Parameter']['Value']
 
 def lambda_handler(event, context):
     headers = {
         'Access-Control-Allow-Origin': '*',
-        'Access-Control-Allow-Headers': 'Content-Type',
+        'Access-Control-Allow-Headers': 'Content-Type,Authorization',
         'Access-Control-Allow-Methods': 'OPTIONS,POST'
     }
 
+    # Trata requisição Preflight CORS do navegador
     if event.get('httpMethod') == 'OPTIONS':
         return {'statusCode': 200, 'headers': headers, 'body': ''}
 
@@ -27,11 +29,15 @@ def lambda_handler(event, context):
         pergunta = body.get('pergunta')
 
         if not pergunta:
-            return {'statusCode': 400, 'headers': headers, 'body': json.dumps({'erro': 'Pergunta em branco.'})}
+            return {
+                'statusCode': 400, 
+                'headers': headers, 
+                'body': json.dumps({'erro': 'A pergunta não pode estar em branco.'})
+            }
 
         kb_id = obter_kb_id()
 
-        # Chamada ao RAG no Bedrock
+        # Execução do RAG no Bedrock com o Amazon Nova 2 Lite
         response = bedrock_agent.retrieve_and_generate(
             input={'text': pergunta},
             retrieveAndGenerateConfiguration={
@@ -50,5 +56,9 @@ def lambda_handler(event, context):
         }
 
     except Exception as e:
-        print(f"Erro: {e}")
-        return {'statusCode': 500, 'headers': headers, 'body': json.dumps({'erro': 'Erro interno ao processar a pergunta.'})}
+        print(f"Erro detalhado na Lambda: {str(e)}")
+        return {
+            'statusCode': 500, 
+            'headers': headers, 
+            'body': json.dumps({'erro': f"Erro interno: {str(e)}"})
+        }

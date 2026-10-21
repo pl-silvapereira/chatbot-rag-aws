@@ -45,12 +45,21 @@
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ pergunta: pergunta })
             });
+            
             const data = await res.json();
             document.getElementById(loadingId).remove();
-            box.innerHTML += `<p><strong>Bot:</strong> ${data.resposta}</p>`;
+
+            if (res.ok && data.resposta) {
+                box.innerHTML += `<p><strong>Bot:</strong> ${data.resposta}</p>`;
+            } else {
+                const msgErro = data.erro || "Erro desconhecido no servidor.";
+                box.innerHTML += `<p style="color:red;"><strong>Erro:</strong> ${msgErro}</p>`;
+            }
         } catch (e) {
-            document.getElementById(loadingId).remove();
-            box.innerHTML += `<p style="color:red;">Erro ao obter resposta.</p>`;
+            if (document.getElementById(loadingId)) {
+                document.getElementById(loadingId).remove();
+            }
+            box.innerHTML += `<p style="color:red;"><strong>Erro:</strong> Falha na ligação com a API (Verificar CORS ou Timeout).</p>`;
         }
         box.scrollTop = box.scrollHeight;
     }
