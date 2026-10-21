@@ -2,68 +2,275 @@
 <html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
-    <title>Chatbot Documental AWS</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Assistente RAG AWS - IBM Carbon UI</title>
+    
+    <!-- Tipografia Oficial IBM Plex Sans -->
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@300;400;600&display=swap">
+    
+    <!-- IBM Carbon Components CSS (CDN) -->
+    <link rel="stylesheet" href="https://unpkg.com/carbon-components@10.58.0/css/carbon-components.min.css">
+    
+    <!-- Marked.js para renderização de Markdown -->
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+
     <style>
-        body { font-family: system-ui, sans-serif; background: #f0f2f5; display: flex; justify-content: center; padding-top: 40px; }
-        .chat-container { background: white; width: 550px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); padding: 20px; }
-        #chat-box { height: 350px; overflow-y: auto; border: 1px solid #ddd; padding: 10px; border-radius: 4px; margin-bottom: 10px; background: #fafafa; }
-        .input-area { display: flex; gap: 8px; }
-        input { flex: 1; padding: 10px; border: 1px solid #ccc; border-radius: 4px; }
-        button { padding: 10px 18px; background: #0066cc; color: white; border: none; border-radius: 4px; cursor: pointer; font-weight: bold; }
+        body {
+            font-family: 'IBM Plex Sans', 'Helvetica Neue', Arial, sans-serif;
+            background-color: #f4f4f4; /* Carbon Gray 10 */
+            margin: 0;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+        }
+
+        /* Top Header IBM Carbon */
+        .carbon-header {
+            background-color: #161616; /* Carbon Gray 100 */
+            color: #ffffff;
+            padding: 0 1.5rem;
+            height: 48px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+        }
+
+        .carbon-header-title {
+            font-size: 14px;
+            font-weight: 600;
+            letter-spacing: 0.1px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .carbon-tag {
+            background-color: #24a148; /* Carbon Green 50 */
+            color: #ffffff;
+            font-size: 11px;
+            padding: 2px 8px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        /* Layout do Container Chat */
+        .app-container {
+            flex: 1;
+            max-width: 840px;
+            width: 100%;
+            margin: 1.5rem auto;
+            display: flex;
+            flex-direction: column;
+            background: #ffffff;
+            border: 1px solid #e0e0e0;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.05);
+        }
+
+        #chat-box {
+            flex: 1;
+            padding: 1.5rem;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 1.25rem;
+            background-color: #f4f4f4;
+        }
+
+        .msg-row {
+            display: flex;
+            flex-direction: column;
+            max-width: 82%;
+        }
+
+        .msg-row.user {
+            align-self: flex-end;
+        }
+
+        .msg-row.bot {
+            align-self: flex-start;
+        }
+
+        .msg-label {
+            font-size: 11px;
+            font-weight: 600;
+            color: #525252;
+            margin-bottom: 4px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .msg-row.user .msg-label {
+            text-align: right;
+        }
+
+        /* Carbon Tiles para balões de mensagem */
+        .bx--tile {
+            padding: 1rem 1.25rem;
+            font-size: 14px;
+            line-height: 1.5;
+            min-height: auto;
+        }
+
+        .msg-row.user .bx--tile {
+            background-color: #0f62fe; /* Carbon Interactive Blue 60 */
+            color: #ffffff;
+            border: none;
+        }
+
+        .msg-row.bot .bx--tile {
+            background-color: #ffffff;
+            color: #161616;
+            border: 1px solid #e0e0e0;
+        }
+
+        /* Estilização interna de Markdown */
+        .bx--tile p { margin-bottom: 8px; }
+        .bx--tile p:last-child { margin-bottom: 0; }
+        .bx--tile ul, .bx--tile ol { margin-left: 20px; margin-bottom: 8px; }
+        .bx--tile strong { font-weight: 600; }
+
+        /* Barra de Entrada Carbon */
+        .input-container {
+            padding: 1.25rem;
+            background-color: #ffffff;
+            border-top: 1px solid #e0e0e0;
+            display: flex;
+            gap: 1rem;
+            align-items: flex-end;
+        }
+
+        .bx--form-item {
+            flex: 1;
+        }
+
+        .bx--text-input {
+            height: 48px;
+            font-size: 14px;
+        }
+
+        .bx--btn--primary {
+            height: 48px;
+            padding: 0 1.5rem;
+        }
+
+        .loading-text {
+            font-size: 13px;
+            color: #525252;
+            font-style: italic;
+        }
     </style>
 </head>
 <body>
 
-<div class="chat-container">
-    <h3>Consulta RAG - Documentos PDF</h3>
-    <div id="chat-box"></div>
-    <div class="input-area">
-        <input type="text" id="pergunta" placeholder="Digite sua pergunta..." onkeypress="if(event.key==='Enter') enviar()">
-        <button onclick="enviar()">Enviar</button>
+    <!-- Header IBM Carbon -->
+    <header class="carbon-header">
+        <div class="carbon-header-title">
+            <span>IBM Carbon UI</span> &nbsp;|&nbsp; <span>Assistente RAG AWS Bedrock</span>
+        </div>
+        <span class="carbon-tag">S3 + Nova 2 Lite</span>
+    </header>
+
+    <!-- Container Principal Chat -->
+    <div class="app-container">
+        <div id="chat-box">
+            <div class="msg-row bot">
+                <span class="msg-label">Assistente IBM Carbon</span>
+                <div class="bx--tile">
+                    <p>Olá! Sou o assistente virtual configurado com o Carbon Design System. Envie sua pergunta sobre os documentos em PDF.</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Área de Entrada de Mensagem -->
+        <div class="input-container">
+            <div class="bx--form-item">
+                <label for="pergunta" class="bx--label">Sua Pergunta</label>
+                <input id="pergunta" type="text" class="bx--text-input" placeholder="Digite sua dúvida aqui..." onkeypress="if(event.key==='Enter') enviar()">
+            </div>
+            <button class="bx--btn bx--btn--primary" type="button" onclick="enviar()">
+                Enviar
+            </button>
+        </div>
     </div>
-</div>
 
-<script>
-    const API_URL = "https://04ly2k25d5.execute-api.us-east-2.amazonaws.com/perguntar";
+    <script>
+        const API_URL = "https://04ly2k25d5.execute-api.us-east-2.amazonaws.com/perguntar";
 
-    async function enviar() {
-        const input = document.getElementById("pergunta");
-        const pergunta = input.value;
-        if (!pergunta) return;
+        async function enviar() {
+            const input = document.getElementById("pergunta");
+            const pergunta = input.value.trim();
+            if (!pergunta) return;
 
-        const box = document.getElementById("chat-box");
-        box.innerHTML += `<p><strong>Você:</strong> ${pergunta}</p>`;
-        input.value = "";
-        
-        const loadingId = "load-" + Date.now();
-        box.innerHTML += `<p id="${loadingId}"><em>Buscando no Bedrock...</em></p>`;
-        box.scrollTop = box.scrollHeight;
+            const box = document.getElementById("chat-box");
 
-        try {
-            const res = await fetch(API_URL, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ pergunta: pergunta })
-            });
-            
-            const data = await res.json();
-            document.getElementById(loadingId).remove();
+            // Mensagem do Usuário
+            box.innerHTML += `
+                <div class="msg-row user">
+                    <span class="msg-label">Você</span>
+                    <div class="bx--tile">${pergunta}</div>
+                </div>
+            `;
+            input.value = "";
 
-            if (res.ok && data.resposta) {
-                box.innerHTML += `<p><strong>Bot:</strong> ${data.resposta}</p>`;
-            } else {
-                const msgErro = data.erro || "Erro desconhecido no servidor.";
-                box.innerHTML += `<p style="color:red;"><strong>Erro:</strong> ${msgErro}</p>`;
-            }
-        } catch (e) {
-            if (document.getElementById(loadingId)) {
+            // Indicador de Carregamento Carbon
+            const loadingId = "load-" + Date.now();
+            box.innerHTML += `
+                <div class="msg-row bot" id="${loadingId}">
+                    <span class="msg-label">Assistente IBM Carbon</span>
+                    <div class="bx--tile loading-text">
+                        Consultando Amazon Bedrock & Base de Conhecimento S3...
+                    </div>
+                </div>
+            `;
+            box.scrollTop = box.scrollHeight;
+
+            try {
+                const res = await fetch(API_URL, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ pergunta: pergunta })
+                });
+
+                const data = await res.json();
                 document.getElementById(loadingId).remove();
-            }
-            box.innerHTML += `<p style="color:red;"><strong>Erro:</strong> Falha na ligação com a API (Verificar CORS ou Timeout).</p>`;
-        }
-        box.scrollTop = box.scrollHeight;
-    }
-</script>
 
+                if (res.ok && data.resposta) {
+                    const htmlResposta = marked.parse(data.resposta);
+                    box.innerHTML += `
+                        <div class="msg-row bot">
+                            <span class="msg-label">Assistente IBM Carbon</span>
+                            <div class="bx--tile">${htmlResposta}</div>
+                        </div>
+                    `;
+                } else {
+                    const msgErro = data.erro || "Erro desconhecido no servidor.";
+                    box.innerHTML += `
+                        <div class="msg-row bot">
+                            <span class="msg-label">Assistente IBM Carbon</span>
+                            <div class="bx--tile" style="border-left: 4px solid #da1e28;">
+                                <strong>Erro:</strong> ${msgErro}
+                            </div>
+                        </div>
+                    `;
+                }
+            } catch (e) {
+                if (document.getElementById(loadingId)) {
+                    document.getElementById(loadingId).remove();
+                }
+                box.innerHTML += `
+                    <div class="msg-row bot">
+                        <span class="msg-label">Assistente IBM Carbon</span>
+                        <div class="bx--tile" style="border-left: 4px solid #da1e28;">
+                            <strong>Erro:</strong> Falha de comunicação com a API.
+                        </div>
+                    </div>
+                `;
+            }
+            box.scrollTop = box.scrollHeight;
+        }
+    </script>
 </body>
 </html>

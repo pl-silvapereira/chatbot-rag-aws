@@ -1,12 +1,30 @@
 import json
 import boto3
 
-# Cliente AWS configurado explicitamente na região us-east-2
+# Cliente AWS configurado na região us-east-2
 ssm_client = boto3.client('ssm', region_name='us-east-2')
 bedrock_agent = boto3.client('bedrock-agent-runtime', region_name='us-east-2')
 
 # Identificador do perfil de inferência regional para o Amazon Nova 2 Lite
 MODEL_ARN = 'us.amazon.nova-2-lite-v1:0'
+
+# Prompt customizado para forçar o idioma Português (ou Inglês sob demanda)
+PROMPT_TEMPLATE = """Você é um assistente virtual especialista em análise de documentos privados via RAG.
+
+Diretrizes de Idioma e Comportamento:
+1. Responda SEMPRE em Português (Brasil) por padrão.
+2. Caso o usuário solicite explicitamente a resposta em Inglês (ou faça a pergunta inteiramente em Inglês), responda em Inglês.
+3. Seja claro, objetivo e cortês.
+4. Utilize formatação Markdown (listas, negrito) para organizar as ideias.
+5. Responda estritamente com base nos documentos de contexto fornecidos.
+
+Informações dos Documentos:
+$search_results$
+
+Instruções de Formato:
+$output_format_instructions$
+
+Pergunta do Usuário: $query$"""
 
 def obter_kb_id():
     """Lê o ID da Knowledge Base gravado no SSM Parameter Store (.env da AWS)"""
@@ -20,7 +38,6 @@ def lambda_handler(event, context):
         'Access-Control-Allow-Methods': 'OPTIONS,POST'
     }
 
-    # Trata requisição Preflight CORS do navegador
     if event.get('httpMethod') == 'OPTIONS':
         return {'statusCode': 200, 'headers': headers, 'body': ''}
 
@@ -37,14 +54,19 @@ def lambda_handler(event, context):
 
         kb_id = obter_kb_id()
 
-        # Execução do RAG no Bedrock com o Amazon Nova 2 Lite
+        # Chamada ao RAG no Bedrock com prompt customizado
         response = bedrock_agent.retrieve_and_generate(
             input={'text': pergunta},
             retrieveAndGenerateConfiguration={
                 'type': 'KNOWLEDGE_BASE',
                 'knowledgeBaseConfiguration': {
                     'knowledgeBaseId': kb_id,
-                    'modelArn': MODEL_ARN
+                    'modelArn': MODEL_ARN,
+                    'generationConfiguration': {
+                        'promptTemplate': {
+                            'promptTemplate': PROMPT_TEMPLATE
+                        }
+                    }
                 }
             }
         )
