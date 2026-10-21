@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Assistente RAG AWS - IBM Carbon UI</title>
+    <title>Assistente Virtual - Consulta RAG AWS</title>
     
     <!-- Tipografia Oficial IBM Plex Sans -->
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@300;400;600&display=swap">
@@ -44,7 +44,13 @@
             letter-spacing: 0.1px;
             display: flex;
             align-items: center;
-            gap: 8px;
+            gap: 10px;
+        }
+
+        .header-robot-img {
+            width: 28px;
+            height: 28px;
+            object-fit: contain;
         }
 
         .carbon-tag {
@@ -80,7 +86,7 @@
             flex-direction: column;
             gap: 1.25rem;
             background-color: #f4f4f4;
-            scroll-behavior: smooth; /* Rolagem suave nativa */
+            scroll-behavior: smooth;
         }
 
         .msg-row {
@@ -100,7 +106,7 @@
         .msg-header {
             display: flex;
             align-items: center;
-            gap: 6px;
+            gap: 8px;
             margin-bottom: 6px;
         }
 
@@ -108,10 +114,17 @@
             justify-content: flex-end;
         }
 
-        .msg-icon {
-            width: 16px;
-            height: 16px;
-            fill: #525252;
+        /* Imagem do avatar do robô */
+        .msg-robot-avatar {
+            width: 24px;
+            height: 24px;
+            object-fit: contain;
+        }
+
+        .msg-user-icon {
+            width: 18px;
+            height: 18px;
+            fill: #0f62fe;
         }
 
         .msg-label {
@@ -128,7 +141,7 @@
             font-size: 14px;
             line-height: 1.5;
             min-height: auto;
-            border-radius: 2px;
+            border-radius: 4px;
         }
 
         .msg-row.user .bx--tile {
@@ -186,10 +199,11 @@
 </head>
 <body>
 
-    <!-- Header IBM Carbon -->
+    <!-- Header -->
     <header class="carbon-header">
         <div class="carbon-header-title">
-            <span>IBM Carbon UI</span> &nbsp;|&nbsp; <span>Assistente RAG AWS Bedrock</span>
+            <img src="robot.png" alt="Robô" class="header-robot-img">
+            <span>Assistente Virtual</span> &nbsp;|&nbsp; <span>Consulta RAG AWS Bedrock</span>
         </div>
         <span class="carbon-tag">Amazon Nova 2 Lite</span>
     </header>
@@ -199,14 +213,11 @@
         <div id="chat-box">
             <div class="msg-row bot">
                 <div class="msg-header">
-                    <!-- Ícone Bot (SVG Carbon) -->
-                    <svg class="msg-icon" viewBox="0 0 32 32">
-                        <path d="M16,2A14,14,0,1,0,30,16,14,14,0,0,0,16,2ZM8,14a2,2,0,1,1,2,2A2,2,0,0,1,8,14Zm12,10H12V22h8Zm2-8a2,2,0,1,1,2-2A2,2,0,0,1,22,16Z"/>
-                    </svg>
-                    <span class="msg-label">Assistente IBM Carbon</span>
+                    <img src="robot.png" alt="Robô" class="msg-robot-avatar">
+                    <span class="msg-label">Assistente Virtual</span>
                 </div>
                 <div class="bx--tile">
-                    <p>Olá! Sou o assistente virtual configurado com o Carbon Design System. Envie sua pergunta sobre os documentos em PDF.</p>
+                    <p>Olá! Sou o assistente virtual. Envie sua pergunta sobre os documentos em PDF.</p>
                 </div>
             </div>
         </div>
@@ -226,7 +237,8 @@
     <script>
         const API_URL = "https://04ly2k25d5.execute-api.us-east-2.amazonaws.com/perguntar";
 
-        // Função de Scroll Down Automático
+        const ROBOT_AVATAR_HTML = `<img src="robot.png" alt="Robô" class="msg-robot-avatar">`;
+
         function scrollToBottom() {
             const box = document.getElementById("chat-box");
             setTimeout(() => {
@@ -241,12 +253,12 @@
 
             const box = document.getElementById("chat-box");
 
-            // Adiciona Mensagem do Usuário com Ícone 👤
+            // Mensagem do Usuário
             box.innerHTML += `
                 <div class="msg-row user">
                     <div class="msg-header">
                         <span class="msg-label">Você</span>
-                        <svg class="msg-icon" style="fill: #0f62fe;" viewBox="0 0 32 32">
+                        <svg class="msg-user-icon" viewBox="0 0 32 32">
                             <path d="M16,4a6,6,0,1,1-6,6A6,6,0,0,1,16,4m0-2a8,8,0,1,0,8,8A8,8,0,0,0,16,2Zm10,28H6V26a6,6,0,0,1,6-6h8a6,6,0,0,1,6,6Zm-18-2H24V26a4,4,0,0,0-4-4H12a4,4,0,0,0-4,4Z"/>
                         </svg>
                     </div>
@@ -256,15 +268,13 @@
             input.value = "";
             scrollToBottom();
 
-            // Indicador de Carregamento Carbon
+            // Indicador de Carregamento
             const loadingId = "load-" + Date.now();
             box.innerHTML += `
                 <div class="msg-row bot" id="${loadingId}">
                     <div class="msg-header">
-                        <svg class="msg-icon" viewBox="0 0 32 32">
-                            <path d="M16,2A14,14,0,1,0,30,16,14,14,0,0,0,16,2ZM8,14a2,2,0,1,1,2,2A2,2,0,0,1,8,14Zm12,10H12V22h8Zm2-8a2,2,0,1,1,2-2A2,2,0,0,1,22,16Z"/>
-                        </svg>
-                        <span class="msg-label">Assistente IBM Carbon</span>
+                        ${ROBOT_AVATAR_HTML}
+                        <span class="msg-label">Assistente Virtual</span>
                     </div>
                     <div class="bx--tile loading-text">
                         Consultando Amazon Bedrock & Base de Conhecimento...
@@ -288,10 +298,8 @@
                     box.innerHTML += `
                         <div class="msg-row bot">
                             <div class="msg-header">
-                                <svg class="msg-icon" viewBox="0 0 32 32">
-                                    <path d="M16,2A14,14,0,1,0,30,16,14,14,0,0,0,16,2ZM8,14a2,2,0,1,1,2,2A2,2,0,0,1,8,14Zm12,10H12V22h8Zm2-8a2,2,0,1,1,2-2A2,2,0,0,1,22,16Z"/>
-                                </svg>
-                                <span class="msg-label">Assistente IBM Carbon</span>
+                                ${ROBOT_AVATAR_HTML}
+                                <span class="msg-label">Assistente Virtual</span>
                             </div>
                             <div class="bx--tile">${htmlResposta}</div>
                         </div>
@@ -301,10 +309,8 @@
                     box.innerHTML += `
                         <div class="msg-row bot">
                             <div class="msg-header">
-                                <svg class="msg-icon" viewBox="0 0 32 32">
-                                    <path d="M16,2A14,14,0,1,0,30,16,14,14,0,0,0,16,2ZM8,14a2,2,0,1,1,2,2A2,2,0,0,1,8,14Zm12,10H12V22h8Zm2-8a2,2,0,1,1,2-2A2,2,0,0,1,22,16Z"/>
-                                </svg>
-                                <span class="msg-label">Assistente IBM Carbon</span>
+                                ${ROBOT_AVATAR_HTML}
+                                <span class="msg-label">Assistente Virtual</span>
                             </div>
                             <div class="bx--tile" style="border-left: 4px solid #da1e28;">
                                 <strong>Erro:</strong> ${msgErro}
@@ -319,10 +325,8 @@
                 box.innerHTML += `
                     <div class="msg-row bot">
                         <div class="msg-header">
-                            <svg class="msg-icon" viewBox="0 0 32 32">
-                                <path d="M16,2A14,14,0,1,0,30,16,14,14,0,0,0,16,2ZM8,14a2,2,0,1,1,2,2A2,2,0,0,1,8,14Zm12,10H12V22h8Zm2-8a2,2,0,1,1,2-2A2,2,0,0,1,22,16Z"/>
-                            </svg>
-                            <span class="msg-label">Assistente IBM Carbon</span>
+                            ${ROBOT_AVATAR_HTML}
+                            <span class="msg-label">Assistente Virtual</span>
                         </div>
                         <div class="bx--tile" style="border-left: 4px solid #da1e28;">
                             <strong>Erro:</strong> Falha de comunicação com a API.
