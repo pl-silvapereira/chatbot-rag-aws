@@ -5,8 +5,8 @@ import boto3
 ssm_client = boto3.client('ssm', region_name='us-east-2')
 bedrock_agent = boto3.client('bedrock-agent-runtime', region_name='us-east-2')
 
-# ARN do Amazon Nova 2 Lite com perfil de inferência entre regiões (US)
-MODEL_ARN = 'arn:aws:bedrock:us-east-2::foundation-model/us.amazon.nova-2-lite-v1:0'
+# Identificador do perfil de inferência regional para o Amazon Nova 2 Lite
+MODEL_ARN = 'us.amazon.nova-2-lite-v1:0'
 
 def obter_kb_id():
     """Lê o ID da Knowledge Base gravado no SSM Parameter Store (.env da AWS)"""
