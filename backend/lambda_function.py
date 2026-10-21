@@ -1,7 +1,7 @@
 import json
 import boto3
 
-# Cliente AWS configurado na região us-east-2
+# Cliente AWS configurado explicitamente na região us-east-2
 ssm_client = boto3.client('ssm', region_name='us-east-2')
 bedrock_agent = boto3.client('bedrock-agent-runtime', region_name='us-east-2')
 
@@ -54,7 +54,7 @@ def lambda_handler(event, context):
 
         kb_id = obter_kb_id()
 
-        # Chamada ao RAG no Bedrock com prompt customizado
+        # Chamada ao RAG no Bedrock com a chave 'textPromptTemplate' corrigida
         response = bedrock_agent.retrieve_and_generate(
             input={'text': pergunta},
             retrieveAndGenerateConfiguration={
@@ -64,7 +64,7 @@ def lambda_handler(event, context):
                     'modelArn': MODEL_ARN,
                     'generationConfiguration': {
                         'promptTemplate': {
-                            'promptTemplate': PROMPT_TEMPLATE
+                            'textPromptTemplate': PROMPT_TEMPLATE
                         }
                     }
                 }
